@@ -11,6 +11,10 @@ module.exports = {
       forking: {
         url: "https://mainnet.infura.io/v3/9a755ff3354b427aaab1837447d93a46"
       }
+    },
+    rinkeby: {
+      url: "https://rinkeby.infura.io/v3/9a755ff3354b427aaab1837447d93a46",
+      accounts: ["9d085d5d64d3fec1f821ec13aff69995fdf8b8d29d70019d0bc7ca5b777b3dc9"]
     }
   },
   solidity: {

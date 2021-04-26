@@ -50,7 +50,7 @@ contract Battle {
 
     mapping(address => uint) public totalNFTStrengthPerUser;
     mapping(address => uint) public pureNFTStrengthPerUser;
-    mapping(address => bool) private percentMultiplierApplied;
+    mapping(address => uint) private percentMultiplierApplied;
     mapping(address => uint) public percentMultiplierPerUser;
 
     mapping(address => uint) public lastCheckTimePerUser;
@@ -59,6 +59,8 @@ contract Battle {
     // mapping(uint => NftToken) public nftTokenMap;
     mapping(address => NftToken[]) public nftTokenMap;
     mapping(address => uint[]) public nftTokens;
+
+    mapping(uint => mapping(uint => bool)) public acceptableIdTeam;
 
     uint public battleDuration = 7 days;
     uint public rewardDuration = 24 hours;
@@ -70,7 +72,8 @@ contract Battle {
     event NDRStaked(address indexed user, uint amount);
     event NFTStaked(address indexed user, uint tokenId, uint amount);
     event BoughtNFT(address indexed user, uint tokenId);
-    event Withdrawn(address indexed user, uint tokenId, uint amount);
+    event WithdrawnNFT(address indexed user, uint tokenId, uint amount);
+    event WithdrawnNDR(address indexed user, uint amount);
 
     constructor (
         address _NDR, address _NFT
@@ -87,14 +90,6 @@ contract Battle {
 
     modifier updateHash() {
         uint teamId = teamIdPerUser[msg.sender];
-        // uint teamStrength = totalNFTStrengthPerTeam[teamId];
-        // uint teamNDRAmount = totalNDRAmountPerTeam[teamId];
-        // if (teamStrength != 0) {
-        //     if (teamNDRAmount > teamStrength) {
-        //         dayHashPerTeam[teamId] = teamStrength;
-        //     }
-        //     dayHashPerTeam[teamId] = teamNDRAmount;
-        // }
         uint rewardRateTeam = dayHashPerTeam[teamId] / rewardDuration;
         uint rewardRateUser = dayHashPerUser[msg.sender] / rewardDuration;
         totalHashPerTeam[teamId] += rewardRateTeam * (block.timestamp - lastCheckTimePerTeam[teamId]);
@@ -102,6 +97,17 @@ contract Battle {
         lastCheckTimePerTeam[teamId] = block.timestamp;
         lastCheckTimePerUser[msg.sender] = block.timestamp;
         _;
+    }
+
+    function setOwner(address _owner) public onlyOwner {
+        owner = _owner;
+    } 
+
+    function setSupportedIds(uint[] calldata tokenIds, uint teamId) public onlyOwner {
+        for (uint i = 0; i < tokenIds.length; i++) {
+            uint tokenId = tokenIds[i];
+            acceptableIdTeam[teamId][tokenId] = true;
+        }
     }
 
     function changeAddresses(address _NDR, address _NFT) public onlyOwner {
@@ -113,11 +119,21 @@ contract Battle {
         return totalNDRAmountPerTeam[teamId];
     }
 
-    // function getNftTokens()
+    function getTeamTotalNFTStrength(uint teamId) public view returns (uint) {
+        return totalNFTStrengthPerTeam[teamId];
+    }
 
-    function setOwner(address _owner) public onlyOwner {
-        owner = _owner;
-    } 
+    function getUserTotalNFTStrength(address user) public view returns (uint) {
+        return totalNFTStrengthPerUser[user];
+    }
+
+    function getTeamDayHash(uint teamId) public view returns (uint) {
+        return dayHashPerTeam[teamId];
+    }
+
+    function getUserDayHash(address user) public view returns (uint) {
+        return dayHashPerUser[user];
+    }
 
     function selectTeam(uint teamId) public {
         require(teamIdPerUser[msg.sender] == 0, "Can not change team.");
@@ -125,15 +141,31 @@ contract Battle {
     }
 
     function startBattle() public onlyOwner {
+        require(startTime == 0, "already started!");
         startTime = block.timestamp;
     }
+
+    function getTeamHashResult(uint teamId) public view returns (uint) {
+        require(block.timestamp >= startTime, "The battle has not been started.");
+        uint rewardRateTeam = dayHashPerTeam[teamId] / rewardDuration;
+        uint lastTotalHash = totalHashPerTeam[teamId];
+        if (block.timestamp >= startTime + battleDuration) {
+            lastTotalHash += rewardRateTeam * (startTime + battleDuration - lastCheckTimePerTeam[teamId]);
+        } else {
+            lastTotalHash += rewardRateTeam * (block.timestamp - lastCheckTimePerTeam[teamId]);
+        }
+        return lastTotalHash;
+    }
+
+    // function getUserHashResult(address user) public view returns (uint) {
+        
+    // }
 
     function stakeNFT(uint[] calldata tokenIds, uint[] calldata amounts) public updateHash {
         require(startTime < block.timestamp, "The battle has not been started yet.");
         require(block.timestamp < startTime + battleDuration, "The battle has already been ended.");
         require(tokenIds.length == amounts.length, "TokenIds and amounts length should be the same");
         require(teamIdPerUser[msg.sender] > 0, "Please select team before staking");
-        uint teamId = teamIdPerUser[msg.sender];
         for (uint i = 0; i < tokenIds.length; i++) {
             // stakeInternal
             stakeInternal(tokenIds[i], amounts[i]);
@@ -141,59 +173,59 @@ contract Battle {
     }
 
     function stakeInternal(uint256 tokenId, uint256 amount) internal {
-        (uint256 strength,,,,,uint256 series) = INodeRunnersNFT(address(NFT)).getFighter(tokenId);
-        strength = strength * amount;
         uint teamId = teamIdPerUser[msg.sender];
+        require(acceptableIdTeam[teamId][tokenId] == true, "Not acceptable tokenId for this team.");
+        (uint256 strength,,,,,uint256 series) = INodeRunnersNFT(address(NFT)).getFighter(tokenId);
+        strength = strength * amount * 100;
 
-        // if(!nftTokenMap[tokenId].hasValue) {
-        //     nftTokens.push(tokenId);
-        //     nftTokenMap[tokenId] = NftToken({ hasValue: true });
-        // }
-        
-        // uint totalStrength = totalNFTStrengthPerUser[msg.sender];
-        // uint percentMultiplier = percentMultiplierPerUser[msg.sender];
         if (series == 3) {
             require(amount == 1, "only one nft with series 3 badge");
-            require(percentMultiplierApplied[msg.sender] == false, "nft with series 3 already applied");
-            percentMultiplierApplied[msg.sender] = true;
-            // totalStrength = totalStrength * 11 / 10;
-            // percentMultiplierPerUser[msg.sender] = percentMultiplierPerUser[msg.sender] * 110;
+            require(percentMultiplierApplied[msg.sender] == 0 || percentMultiplierApplied[msg.sender] == 2, "nft with series 3 already applied");
+            if (percentMultiplierApplied[msg.sender] == 0) {
+                percentMultiplierApplied[msg.sender] = 1;
+            } else {
+                percentMultiplierApplied[msg.sender] == 3;
+            }
         }
         if (series == 4) {
             require(amount == 1, "only one nft with series 4 badge");
-            // percentMultiplierPerUser[msg.sender] = percentMultiplierPerUser[msg.sender] * 105;
+            require(percentMultiplierApplied[msg.sender] == 0 || percentMultiplierApplied[msg.sender] == 1, "nft with series 4 already applied");
+            if (percentMultiplierApplied[msg.sender] == 0) {
+                percentMultiplierApplied[msg.sender] = 2;
+            } else {
+                percentMultiplierApplied[msg.sender] = 3;
+            }
         }
         totalNFTStrengthPerTeam[teamId] = totalNFTStrengthPerTeam[teamId] - totalNFTStrengthPerUser[msg.sender];
         pureNFTStrengthPerUser[msg.sender] = pureNFTStrengthPerUser[msg.sender] + strength;
 
-        if (percentMultiplierApplied[msg.sender]) {
-            totalNFTStrengthPerUser[msg.sender] = pureNFTStrengthPerUser[msg.sender] * 110 / 100; 
+        if (percentMultiplierApplied[msg.sender] == 1) {
+            totalNFTStrengthPerUser[msg.sender] = pureNFTStrengthPerUser[msg.sender] * 110 / 100;
+        } else if (percentMultiplierApplied[msg.sender] == 2) {
+            totalNFTStrengthPerUser[msg.sender] = pureNFTStrengthPerUser[msg.sender] * 105 / 100;
+        } else if (percentMultiplierApplied[msg.sender] == 3) {
+            totalNFTStrengthPerUser[msg.sender] = pureNFTStrengthPerUser[msg.sender] * 11 * 105 / 1000;
         } else {
             totalNFTStrengthPerUser[msg.sender] = pureNFTStrengthPerUser[msg.sender];
         }
 
-        // totalStrength += strength;
         balanceNFTPerUser[msg.sender] += amount;
         totalNFTStrengthPerTeam[teamId] += totalNFTStrengthPerUser[msg.sender];
-        // totalNFTStrengthPerUser[msg.sender] = totalStrength;
         nftTokenMap[msg.sender].push(NftToken(tokenId, amount));
-        // nftTokenMap[tokenId].balances[msg.sender] += amount;
 
         NFT.safeTransferFrom(msg.sender, address(this), tokenId, amount, "0x0");
         updateDayHash(msg.sender, teamId);
-        // totalHashPerTeam[teamId] = totalNDRAmountPerTeam[teamId] * 
         emit NFTStaked(msg.sender, tokenId, amount);
-
     }
 
-    function stakeNDR(uint256 amount) public updateHash {
+    function stakeNDR(uint amount) public updateHash {
         require(startTime < block.timestamp, "The battle has not been started yet.");
         require(block.timestamp < startTime + battleDuration, "The battle has already been ended.");
         require(amount > 0, "Cannot stake 0");
         require(teamIdPerUser[msg.sender] > 0, "Please select team before staking");
-        uint256 teamId = teamIdPerUser[msg.sender];
-        uint256 teamNDRAmount = totalNDRAmountPerTeam[teamId];
-        uint256 userNDRAmount = balanceNDRPerUser[msg.sender];
+        uint teamId = teamIdPerUser[msg.sender];
+        uint teamNDRAmount = totalNDRAmountPerTeam[teamId];
+        uint userNDRAmount = balanceNDRPerUser[msg.sender];
         // TODO get teamHash
         NDR.transferFrom(msg.sender, address(this), amount);
         teamNDRAmount += amount;
@@ -201,20 +233,6 @@ contract Battle {
         totalNDRAmountPerTeam[teamId] = teamNDRAmount;
         balanceNDRPerUser[msg.sender] = userNDRAmount;
         updateDayHash(msg.sender, teamId);
-        // uint teamStrength = totalNFTStrengthPerTeam[teamId];
-        // uint userStrength = totalNFTStrengthPerUser[msg.sender];
-        // if (teamStrength != 0) {
-        //     if (teamNDRAmount > teamStrength) {
-        //         dayHashPerTeam[teamId] = teamStrength;
-        //         dayHashPerUser[msg.sender] = userStrength;
-        //     } else {
-        //         dayHashPerTeam[teamId] = teamNDRAmount;
-        //         dayHashPerUser[msg.sender] = userNDRAmount;
-        //     }
-        // }
-
-        // lastCheckTimePerUser[msg.sender] = block.timestamp;
-        // lastCheckTimePerTeam[teamId] = block.timestamp;
 
         emit NDRStaked(msg.sender, amount);
     }
@@ -222,10 +240,10 @@ contract Battle {
     function updateDayHash(address user, uint teamId) internal {
         uint teamStrength = totalNFTStrengthPerTeam[teamId];
         uint userStrength = totalNFTStrengthPerUser[user];
-        uint teamNDRAmount = totalNDRAmountPerTeam[teamId];
-        uint userNDRAmount = balanceNDRPerUser[user];
+        uint teamNDRAmount = totalNDRAmountPerTeam[teamId] / (1e18);
+        uint userNDRAmount = balanceNDRPerUser[user] / (1e18);
         if (teamStrength != 0) {
-            if (teamNDRAmount > teamStrength) {
+            if (teamNDRAmount * 10000 > teamStrength) {
                 dayHashPerTeam[teamId] = teamStrength;
                 dayHashPerUser[user] = userStrength;
             } else {
@@ -235,10 +253,19 @@ contract Battle {
         }
     }
 
-    function buyNewNFT(uint tokenId) public updateHash {
-        (,,,,uint256 hashPrice,) = INodeRunnersNFT(address(NFT)).getFighter(tokenId);
-        require(hashPrice > 0, "can't buy in hash");
+    function getMintingFee(uint rarity, uint teamId) internal returns (uint) {
+        uint teamStrength = totalNFTStrengthPerTeam[teamId];
+        uint teamNDRAmount = totalNDRAmountPerTeam[teamId] / (1e18);
+        uint fee = rarity * teamNDRAmount * 10000 / teamStrength;
+        return fee;
+    }
+
+    function buyNewNFT(uint tokenId) public updateHash payable {
+        (,,,uint256 rarity,uint256 hashPrice,) = INodeRunnersNFT(address(NFT)).getFighter(tokenId);
         uint teamId = teamIdPerUser[msg.sender];
+        require(hashPrice > 0, "can't buy in hash");
+        uint fee = getMintingFee(rarity, teamId);
+        require(msg.value >= fee, "wrong value");
         uint userHash = totalHashPerUser[msg.sender];
         uint teamHash = totalHashPerTeam[teamId];
         require(userHash >= hashPrice, "not enough Hash");
@@ -251,22 +278,32 @@ contract Battle {
         emit BoughtNFT(msg.sender, tokenId);
     }
 
-    function withdraw() public {
+    function withdrawNFT() public {
         require(block.timestamp > startTime + battleDuration, "The battle has not been ended");
-        // uint length = nftTokenMap[msg.sender].length;
         NftToken[] memory tokens = nftTokenMap[msg.sender];
         for (uint i = 0; i< tokens.length; i++) {
             uint id = tokens[i].tokenId;
             uint amount = tokens[i].balances;
+            tokens[i].balances -= amount;
             NFT.safeTransferFrom(address(this), msg.sender, id, amount, "0x0");
-            emit Withdrawn(msg.sender, id, amount);
+            emit WithdrawnNFT(msg.sender, id, amount);
         }
+    }
 
+    function withdrawNDR() public {
+        // require(block.timestamp > startTime + battleDuration, "The battle has not been ended");
         uint ndrAmount = balanceNDRPerUser[msg.sender];
         balanceNDRPerUser[msg.sender] -= ndrAmount;
         NDR.transfer(msg.sender, ndrAmount);
-
-        // ndr send, validate balance
+        emit WithdrawnNDR(msg.sender, ndrAmount);
     }
 
+    function onERC1155Received(address, address, uint256, uint256, bytes memory) public pure virtual returns (bytes4) {
+        return this.onERC1155Received.selector;
+    }
+
+    function seize(address to) external onlyOwner {
+        uint amount = address(this).balance;
+        payable(to).transfer(amount);
+    }
 }
