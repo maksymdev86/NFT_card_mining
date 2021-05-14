@@ -3,17 +3,15 @@ const NDR_ABI = require('../abis/Ndr_abi.json');
 const UNISWAP_ABI = require('../abis/Uniswap_abi.json');
 const LPSTAKING_ABI = require('../abis/LpStaking_abi.json');
 const NFT_ABI = require('../abis/Nft_abi.json');
-const { web3 } = require('hardhat');
-const { assert } = require('hardhat');
-
+const { web3, assert } = require('hardhat');
 
 // Traditional Truffle test
 contract("Battle", accounts => {
-  const uniswapV2Router02 = "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D";
-  const WETHAddress = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2";
-  const NDRAddress = "0x739763a258640919981F9bA610AE65492455bE53";
-  const NFTAddress = "0x89eE76cC25Fcbf1714ed575FAa6A10202B71c26A";
-  const LPStakingAddress = "0x2C92744A0428E405e95Dc3eb812e1B87872B22eB";
+  const UNI_SWAP_V2_ROUTER02 = process.env.UNI_SWAP_V2_ROUTER02;
+  const WETHAddress = process.env.WETH_ADDRESS;
+  const NDRAddress = process.env.NDR_ADDRESS;
+  const NFTAddress = process.env.NFT_ADDRESS;
+  const LP_STAKING_ADDRESS = process.env.LP_STAKING_ADDRESS;
 
   let lpContract;
   let nftContract;
@@ -23,10 +21,10 @@ contract("Battle", accounts => {
 
   before(async function () {
     battle = await Battle.new(NDRAddress, NFTAddress);
-    lpContract = new web3.eth.Contract(LPSTAKING_ABI, LPStakingAddress);
+    lpContract = new web3.eth.Contract(LPSTAKING_ABI, LP_STAKING_ADDRESS);
     nftContract = new web3.eth.Contract(NFT_ABI, NFTAddress);
     ndr = new web3.eth.Contract(NDR_ABI, NDRAddress);
-    uniswap = new web3.eth.Contract(UNISWAP_ABI, uniswapV2Router02);
+    uniswap = new web3.eth.Contract(UNISWAP_ABI, UNI_SWAP_V2_ROUTER02);
   });
 
   it("Start a battle", async function() {
@@ -61,7 +59,7 @@ contract("Battle", accounts => {
     let balance2 = await ndr.methods.balanceOf(accounts[2]).call();
     let balance3 = await ndr.methods.balanceOf(accounts[3]).call();
     let balance4 = await ndr.methods.balanceOf(accounts[4]).call();
-  
+
     assert.equal(balance1.toString(), amountBuyNDR.toString());
     assert.equal(balance2.toString(), amountBuyNDR.toString());
     assert.equal(balance3.toString(), amountBuyNDR.toString());
@@ -91,7 +89,7 @@ contract("Battle", accounts => {
     let ndrAmountStaked_2 = await battle.balanceNDRPerUser(accounts[2]);
     let ndrAmountStaked_3 = await battle.balanceNDRPerUser(accounts[3]);
     let ndrAmountStaked_4 = await battle.balanceNDRPerUser(accounts[4]);
-    
+
     assert.equal(stakeAmount_1.toString(), ndrAmountStaked_1.toString());
     assert.equal(stakeAmount_2.toString(), ndrAmountStaked_2.toString());
     assert.equal(stakeAmount_3.toString(), ndrAmountStaked_3.toString());
@@ -105,12 +103,12 @@ contract("Battle", accounts => {
     let ndrAmountStaked_1 = await battle.balanceNDRPerUser(accounts[1]);
     let ndrAmountStaked_2 = await battle.balanceNDRPerUser(accounts[2]);
 
-    console.log(typeof(ndrAmountStaked_1));
-    
+    console.log(ndrAmountStaked_team_1.toString());
+
     let ndr_team_1 = await battle.getTeamNDRAmount(1);
 
     console.log(ndr_team_1.toString());
-    assert.equal(ndrAmountStaked_team_1, ndr_team_1);
+    assert.equal(ndrAmountStaked_team_1.toString(), ndr_team_1);
     console.log(ndrAmountStaked_team_2.toString());
   });
 
@@ -145,7 +143,7 @@ contract("Battle", accounts => {
   });
 
   it("deposit NFT", async function() {
-   
+
     await battle.stakeNFT([1], [1], {from: accounts[1]});
     await battle.stakeNFT([1], [1], {from: accounts[2]});
     await battle.stakeNFT([1], [1], {from: accounts[3]});
@@ -179,7 +177,7 @@ contract("Battle", accounts => {
     let dayHash_account_2 = await battle.getUserDayHash(accounts[2]);
     let dayHash_account_3 = await battle.getUserDayHash(accounts[3]);
     let dayHash_account_4 = await battle.getUserDayHash(accounts[4]);
- 
+
     console.log(totalStrength_team_1.toString());
     console.log(totalStrength_team_2.toString());
 
@@ -206,14 +204,14 @@ contract("Battle", accounts => {
   });
 
   // it("deposit NDR", async function() {
-  
+
   //   let amountDeposit = web3.utils.toBN(100 * 10 ** 18);
   //   await uniswap.methods.swapETHForExactTokens(amountDeposit.toString(), [WETHAddress, NDRAddress], accounts[0], '9600952122').send({from:accounts[0], value:amountDeposit.toString(), gas: 3000000, gasPrice: web3.utils.toWei("1", "gwei")});
   //   await uniswap.methods.swapETHForExactTokens(amountDeposit.toString(), [WETHAddress, NDRAddress], accounts[1], '9600952122').send({from:accounts[1], value:amountDeposit.toString(), gas: 3000000, gasPrice: web3.utils.toWei("1", "gwei")});
   //   await uniswap.methods.swapETHForExactTokens(amountDeposit.toString(), [WETHAddress, NDRAddress], accounts[1], '9600952122').send({from:accounts[2], value:amountDeposit.toString(), gas: 3000000, gasPrice: web3.utils.toWei("1", "gwei")});
   //   await uniswap.methods.swapETHForExactTokens(amountDeposit.toString(), [WETHAddress, NDRAddress], accounts[1], '9600952122').send({from:accounts[3], value:amountDeposit.toString(), gas: 3000000, gasPrice: web3.utils.toWei("1", "gwei")});
-    
-  
+
+
   //   await ndr.methods.approve(battle.address, amountDeposit.toString()).send({from:accounts[0], gas: 3000000, gasPrice: web3.utils.toWei("1", "gwei")});
   //   await ndr.methods.approve(battle.address, amountDeposit.toString()).send({from:accounts[1], gas: 3000000, gasPrice: web3.utils.toWei("1", "gwei")});
   //   await ndr.methods.approve(battle.address, amountDeposit.toString()).send({from:accounts[2], gas: 3000000, gasPrice: web3.utils.toWei("1", "gwei")});

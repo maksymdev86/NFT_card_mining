@@ -101,7 +101,7 @@ contract Battle {
 
     function setOwner(address _owner) public onlyOwner {
         owner = _owner;
-    } 
+    }
 
     function setSupportedIds(uint[] calldata tokenIds, uint teamId) public onlyOwner {
         for (uint i = 0; i < tokenIds.length; i++) {
