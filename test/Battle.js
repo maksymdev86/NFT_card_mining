@@ -1,3 +1,5 @@
+require('dotenv').config();
+
 const Battle = artifacts.require("Battle");
 const NDR_ABI = require('../abis/Ndr_abi.json');
 const UNISWAP_ABI = require('../abis/Uniswap_abi.json');
