@@ -3,6 +3,7 @@
  */
 require("@nomiclabs/hardhat-truffle5");
 require("@nomiclabs/hardhat-etherscan");
+require('dotenv').config();
 
 module.exports = {
   defaultNetwork: "hardhat",
@@ -14,7 +15,7 @@ module.exports = {
     },
     rinkeby: {
       url: "https://rinkeby.infura.io/v3/9a755ff3354b427aaab1837447d93a46",
-      accounts: process.env.RINKEBY_ACCOUNTS
+      accounts: [process.env.RINKEBY_ACCOUNTS]
     }
   },
   solidity: {
