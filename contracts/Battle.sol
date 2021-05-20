@@ -77,7 +77,7 @@ contract Battle {
 
     constructor (
         address _NDR, address _NFT
-        ) public {
+        ) {
         NDR = IERC20(_NDR);
         NFT = IERC1155(_NFT);
         owner = msg.sender;
@@ -253,7 +253,7 @@ contract Battle {
         }
     }
 
-    function getMintingFee(uint rarity, uint teamId) internal returns (uint) {
+    function getMintingFee(uint rarity, uint teamId) internal view returns (uint) {
         uint teamStrength = totalNFTStrengthPerTeam[teamId];
         uint teamNDRAmount = totalNDRAmountPerTeam[teamId] / (1e18);
         uint fee = rarity * teamNDRAmount * 10000 / teamStrength;

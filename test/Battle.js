@@ -145,7 +145,6 @@ contract("Battle", accounts => {
   });
 
   it("deposit NFT", async function() {
-
     await battle.stakeNFT([1], [1], {from: accounts[1]});
     await battle.stakeNFT([1], [1], {from: accounts[2]});
     await battle.stakeNFT([1], [1], {from: accounts[3]});
