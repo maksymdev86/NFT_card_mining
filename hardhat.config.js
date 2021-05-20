@@ -31,6 +31,6 @@ module.exports = {
     timeout: 999999
   },
   etherscan: {
-    apiKey: "CDXGZVNEKNXYZMBBFE2RX5Z4S823ZCC7ZF"
+    apiKey: "5NGWZZ8J2HPYNYPE7PXR7UBX2P1AUYY1PC"
   }
 };
