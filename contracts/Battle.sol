@@ -65,6 +65,7 @@ contract Battle {
     uint public battleDuration = 7 days;
     uint public rewardDuration = 24 hours;
     uint public startTime;
+    uint private _nftFee;
 
     address public owner;
     // bool public started;
@@ -143,6 +144,12 @@ contract Battle {
     function startBattle() public onlyOwner {
         require(startTime == 0, "already started!");
         startTime = block.timestamp;
+    }
+
+    function getBattleStartDate() public view returns (uint) {
+        require(block.timestamp >= startTime, "The battle has not been started.");
+        require(block.timestamp < startTime + battleDuration, "The battle has already been ended.");
+        return startTime;
     }
 
     function getTeamHashResult(uint teamId) public view returns (uint) {
@@ -251,6 +258,15 @@ contract Battle {
                 dayHashPerUser[user] = userNDRAmount;
             }
         }
+    }
+
+    function setNftFee() external payable onlyOwner {
+        _nftFee = msg.value;
+    }
+
+    function getNftFee() public view returns(uint) {
+        require(_nftFee > 0, "Nft fee has not set yet.");
+        return _nftFee;
     }
 
     function getMintingFee(uint rarity, uint teamId) internal view returns (uint) {
