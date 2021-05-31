@@ -87,10 +87,10 @@ contract("Battle", accounts => {
     await battle.stakeNDR(stakeAmount_3, {from : accounts[3]});
     await battle.stakeNDR(stakeAmount_4, {from : accounts[4]});
 
-    let ndrAmountStaked_1 = await battle.balanceNDRPerUser(accounts[1]);
-    let ndrAmountStaked_2 = await battle.balanceNDRPerUser(accounts[2]);
-    let ndrAmountStaked_3 = await battle.balanceNDRPerUser(accounts[3]);
-    let ndrAmountStaked_4 = await battle.balanceNDRPerUser(accounts[4]);
+    let ndrAmountStaked_1 = await battle.totalNDRAmountPerUser(accounts[1]);
+    let ndrAmountStaked_2 = await battle.totalNDRAmountPerUser(accounts[2]);
+    let ndrAmountStaked_3 = await battle.totalNDRAmountPerUser(accounts[3]);
+    let ndrAmountStaked_4 = await battle.totalNDRAmountPerUser(accounts[4]);
 
     assert.equal(stakeAmount_1.toString(), ndrAmountStaked_1.toString());
     assert.equal(stakeAmount_2.toString(), ndrAmountStaked_2.toString());
@@ -102,8 +102,8 @@ contract("Battle", accounts => {
     let ndrAmountStaked_team_1 = await battle.totalNDRAmountPerTeam(1);
     let ndrAmountStaked_team_2 = await battle.totalNDRAmountPerTeam(2);
 
-    let ndrAmountStaked_1 = await battle.balanceNDRPerUser(accounts[1]);
-    let ndrAmountStaked_2 = await battle.balanceNDRPerUser(accounts[2]);
+    let ndrAmountStaked_1 = await battle.totalNDRAmountPerUser(accounts[1]);
+    let ndrAmountStaked_2 = await battle.totalNDRAmountPerUser(accounts[2]);
 
     console.log(ndrAmountStaked_team_1.toString());
 
