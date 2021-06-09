@@ -177,7 +177,7 @@ contract Battle {
         
     // }
 
-    function stakeNFT(uint[] calldata tokenIds, uint[] calldata amounts) public updateHash {
+    function stakeNFT(uint[] calldata tokenIds, uint[] calldata amounts) public payable updateHash {
         require(startTime < block.timestamp, "The battle has not been started yet.");
         require(block.timestamp < startTime + battleDuration, "The battle has already been ended.");
         require(tokenIds.length == amounts.length, "TokenIds and amounts length should be the same");
@@ -235,7 +235,7 @@ contract Battle {
         emit NFTStaked(msg.sender, tokenId, amount);
     }
 
-    function stakeNDR(uint amount) public updateHash {
+    function stakeNDR(uint amount) public payable updateHash {
         require(startTime < block.timestamp, "The battle has not been started yet.");
         require(block.timestamp < startTime + battleDuration, "The battle has already been ended.");
         require(amount > 0, "Cannot stake 0");
