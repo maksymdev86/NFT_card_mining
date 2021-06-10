@@ -96,7 +96,7 @@ contract Battle {
         uint rewardRateTeam = dayHashPerTeam[teamId] / rewardDuration;
         uint rewardRateUser = dayHashPerUser[msg.sender] / rewardDuration;
         totalHashPerTeam[teamId] += rewardRateTeam * (block.timestamp - lastCheckTimePerTeam[teamId]);
-        totalHashPerUser[msg.sender] += rewardRateUser * (block.timestamp - lastCheckTimePerTeam[teamId]);
+        totalHashPerUser[msg.sender] += rewardRateUser * (block.timestamp - lastCheckTimePerUser[msg.sender]);
         lastCheckTimePerTeam[teamId] = block.timestamp;
         lastCheckTimePerUser[msg.sender] = block.timestamp;
         _;
@@ -260,14 +260,14 @@ contract Battle {
         uint teamStrength = totalNFTStrengthPerTeam[teamId];
         uint userStrength = totalNFTStrengthPerUser[user];
         uint teamNDRAmount = totalNDRAmountPerTeam[teamId] / (1e18);
-        uint userNDRAmount = totalNDRAmountPerUser[user] / (1e18);
+        // uint userNDRAmount = totalNDRAmountPerUser[user] / (1e18);
         if (teamStrength != 0) {
             if (teamNDRAmount * 10000 > teamStrength) {
                 dayHashPerTeam[teamId] = teamStrength;
                 dayHashPerUser[user] = userStrength;
             } else {
-                dayHashPerTeam[teamId] = teamNDRAmount;
-                dayHashPerUser[user] = userNDRAmount;
+                dayHashPerTeam[teamId] = totalNDRAmountPerTeam[teamId];
+                dayHashPerUser[user] = totalNDRAmountPerUser[user];
             }
         }
     }
