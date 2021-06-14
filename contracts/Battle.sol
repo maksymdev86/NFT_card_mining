@@ -64,7 +64,8 @@ contract Battle {
     mapping(uint => mapping(uint => bool)) public acceptableIdTeam;
     mapping(uint => uint) public playersCounter;
 
-    uint public battleDuration = 7 days;
+    // default: 7 days
+    uint public battleDuration = 3 hours;
     uint public rewardDuration = 24 hours;
     uint public startTime;
     uint private _nftFee;
@@ -318,6 +319,7 @@ contract Battle {
             NFT.safeTransferFrom(address(this), msg.sender, id, amount, "0x0");
             emit WithdrawnNFT(msg.sender, id, amount);
         }
+        totalNFTStrengthPerUser[msg.sender] = 0;
     }
 
     function withdrawNDR() public {
