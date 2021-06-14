@@ -321,7 +321,7 @@ contract Battle {
     }
 
     function withdrawNDR() public {
-        // require(block.timestamp > startTime + battleDuration, "The battle has not been ended");
+        require(block.timestamp > startTime + battleDuration, "The battle has not been ended");
         uint ndrAmount = totalNDRAmountPerUser[msg.sender];
         totalNDRAmountPerUser[msg.sender] -= ndrAmount;
         NDR.transfer(msg.sender, ndrAmount);
