@@ -65,7 +65,7 @@ contract Battle {
     mapping(uint => uint) public playersCounter;
 
     // default: 7 days
-    uint public battleDuration = 3 hours;
+    uint public battleDuration = 7 days;
     uint public rewardDuration = 24 hours;
     uint public startTime;
     uint private _nftFee;
