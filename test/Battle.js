@@ -87,10 +87,10 @@ contract("Battle", accounts => {
     await battle.stakeNDR(stakeAmount_3, {from : accounts[3]});
     await battle.stakeNDR(stakeAmount_4, {from : accounts[4]});
 
-    let ndrAmountStaked_1 = await battle.balanceNDRPerUser(accounts[1]);
-    let ndrAmountStaked_2 = await battle.balanceNDRPerUser(accounts[2]);
-    let ndrAmountStaked_3 = await battle.balanceNDRPerUser(accounts[3]);
-    let ndrAmountStaked_4 = await battle.balanceNDRPerUser(accounts[4]);
+    let ndrAmountStaked_1 = await battle.totalNDRAmountPerUser(accounts[1]);
+    let ndrAmountStaked_2 = await battle.totalNDRAmountPerUser(accounts[2]);
+    let ndrAmountStaked_3 = await battle.totalNDRAmountPerUser(accounts[3]);
+    let ndrAmountStaked_4 = await battle.totalNDRAmountPerUser(accounts[4]);
 
     assert.equal(stakeAmount_1.toString(), ndrAmountStaked_1.toString());
     assert.equal(stakeAmount_2.toString(), ndrAmountStaked_2.toString());
@@ -102,8 +102,8 @@ contract("Battle", accounts => {
     let ndrAmountStaked_team_1 = await battle.totalNDRAmountPerTeam(1);
     let ndrAmountStaked_team_2 = await battle.totalNDRAmountPerTeam(2);
 
-    let ndrAmountStaked_1 = await battle.balanceNDRPerUser(accounts[1]);
-    let ndrAmountStaked_2 = await battle.balanceNDRPerUser(accounts[2]);
+    let ndrAmountStaked_1 = await battle.totalNDRAmountPerUser(accounts[1]);
+    let ndrAmountStaked_2 = await battle.totalNDRAmountPerUser(accounts[2]);
 
     console.log(ndrAmountStaked_team_1.toString());
 
@@ -197,6 +197,42 @@ contract("Battle", accounts => {
   });
 
   it("Check team total hash", async function() {
+    let amountBuy = web3.utils.toBN(2 * 10 ** 18);
+    await lpContract.methods.buy(1).send({from:accounts[1], value:amountBuy, gas: 3000000, gasPrice: web3.utils.toWei("1", "gwei")});
+    await lpContract.methods.buy(1).send({from:accounts[2], value:amountBuy, gas: 3000000, gasPrice: web3.utils.toWei("1", "gwei")});
+    await lpContract.methods.buy(1).send({from:accounts[3], value:amountBuy, gas: 3000000, gasPrice: web3.utils.toWei("1", "gwei")});
+    await lpContract.methods.buy(1).send({from:accounts[4], value:amountBuy, gas: 3000000, gasPrice: web3.utils.toWei("1", "gwei")});
+
+    let nftBalance_account_1 = await nftContract.methods.balanceOf(accounts[1], 1).call();
+    let nftBalance_account_2 = await nftContract.methods.balanceOf(accounts[2], 1).call();
+    let nftBalance_account_3 = await nftContract.methods.balanceOf(accounts[3], 1).call();
+    let nftBalance_account_4 = await nftContract.methods.balanceOf(accounts[4], 1).call();
+
+    assert.equal(nftBalance_account_1, 1);
+    assert.equal(nftBalance_account_2, 1);
+    assert.equal(nftBalance_account_3, 1);
+    assert.equal(nftBalance_account_4, 1);
+    
+    await battle.stakeNFT([1], [1], {from: accounts[1]});
+    await battle.stakeNFT([1], [1], {from: accounts[2]});
+    await battle.stakeNFT([1], [1], {from: accounts[3]});
+    await battle.stakeNFT([1], [1], {from: accounts[4]});
+
+    let strength_account_1 = await battle.totalNFTStrengthPerUser(accounts[1]);
+    let strength_account_2 = await battle.totalNFTStrengthPerUser(accounts[2]);
+    let strength_account_3 = await battle.totalNFTStrengthPerUser(accounts[3]);
+    let strength_account_4 = await battle.totalNFTStrengthPerUser(accounts[4]);
+
+    assert.equal(strength_account_1.toString(), 80000);
+    assert.equal(strength_account_2.toString(), 80000);
+    assert.equal(strength_account_3.toString(), 80000);
+    assert.equal(strength_account_4.toString(), 80000);
+    
+    // const time = now + 86400
+    // await ethers.provider.send('evm_setNextBlockTimestamp', [now]);
+    // await network.provider.send("evm_increaseTime", [3600])
+    // await network.provider.send("evm_mine")
+
     let totalHash_team_1 = await battle.getTeamHashResult(1);
     let totalHash_team_2 = await battle.getTeamHashResult(2);
 

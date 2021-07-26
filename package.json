@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "npx hardhat test",
-    "deploy": "npx hardhat run --network rinkeby scripts/deploy.js"
+    "deploy": "npx hardhat run --network rinkeby scripts/deploy.js",
+    "build": "hardhat compile"
   },
   "repository": {
     "type": "git",
