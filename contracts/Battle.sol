@@ -174,9 +174,18 @@ contract Battle {
         return lastTotalHash;
     }
 
-    // function getUserHashResult(address user) public view returns (uint) {
-        
-    // }
+    function getUserHashResult(address user) public view returns (uint) {
+        // require(teamId == 1 || teamId == 2, "teamId should be 1 or 2");
+        require(block.timestamp >= startTime, "The battle has not been started.");
+        uint rewardRateUser = dayHashPerUser[user] / rewardDuration;
+        uint lastTotalHash = totalHashPerUser[user];
+        if (block.timestamp >= startTime + battleDuration) {
+            lastTotalHash += rewardRateUser * (startTime + battleDuration - lastCheckTimePerUser[user]);
+        } else {
+            lastTotalHash += rewardRateUser * (block.timestamp - lastCheckTimePerUser[user]);
+        }
+        return lastTotalHash;
+    }
 
     function stakeNFT(uint[] calldata tokenIds, uint[] calldata amounts) public payable updateHash {
         require(startTime < block.timestamp, "The battle has not been started yet.");
