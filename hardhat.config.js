@@ -6,16 +6,16 @@ require("@nomiclabs/hardhat-etherscan");
 require('dotenv').config();
 
 module.exports = {
-  defaultNetwork: "hardhat",
+  defaultNetwork: "rinkeby",
   networks: {
     hardhat: {
       forking: {
-        url: "https://mainnet.infura.io/v3/9a755ff3354b427aaab1837447d93a46"
+        url: "https://mainnet.infura.io/v3/f599c7aa0a0340eda3c8a96938c37434"
       }
     },
     rinkeby: {
-      url: "https://rinkeby.infura.io/v3/9a755ff3354b427aaab1837447d93a46",
-      accounts: [process.env.RINKEBY_ACCOUNTS]
+      url: "https://rinkeby.infura.io/v3/f599c7aa0a0340eda3c8a96938c37434",
+      accounts: ["35bd7b604364295b2c4c81d40a2c1b6fc80cc04e96abd2e3cec874b831314f3e"]
     }
   },
   solidity: {
