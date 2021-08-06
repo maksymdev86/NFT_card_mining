@@ -10,11 +10,11 @@ module.exports = {
   networks: {
     hardhat: {
       forking: {
-        url: "https://mainnet.infura.io/v3/f599c7aa0a0340eda3c8a96938c37434"
+        url: "https://mainnet.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161"
       }
     },
     rinkeby: {
-      url: "https://rinkeby.infura.io/v3/f599c7aa0a0340eda3c8a96938c37434",
+      url: "https://rinkeby.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161",
       accounts: ["35bd7b604364295b2c4c81d40a2c1b6fc80cc04e96abd2e3cec874b831314f3e"]
     }
   },

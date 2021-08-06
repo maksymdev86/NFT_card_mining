@@ -65,7 +65,8 @@ contract Battle {
     mapping(uint => uint) public playersCounter;
 
     // default: 7 days
-    uint public battleDuration = 7 days;
+    uint private battleDuration = 7 days;
+
     uint public rewardDuration = 24 hours;
     uint public startTime;
     uint private _nftFee;
@@ -113,6 +114,17 @@ contract Battle {
             uint tokenId = tokenIds[i];
             acceptableIdTeam[teamId][tokenId] = true;
         }
+    }
+
+    function setBattleDuration(uint _duration) public onlyOwner {
+        require(startTime == 0, "Can not change during the battle");
+        require(_duration > 0, "Invalid duration value");
+
+        battleDuration = _duration;
+    }
+
+    function getBattleDuration() public view returns (uint) {
+        return battleDuration;
     }
 
     function changeAddresses(address _NDR, address _NFT) public onlyOwner {
